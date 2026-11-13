@@ -1,0 +1,16 @@
+-- gerado pelo PC para o site (sem anotacoes)
+return {
+    ["partial_md5_checksum"] = "1665705e3bf3638e40619a36726e3d3a",
+    ["doc_props"] = {
+        ["title"] = "Medo Imortal",
+        ["authors"] = "Vários autores",
+        ["language"] = "pt-BR",
+        ["description"] = "O ano é 1897. Estamos nas vésperas da celebração dos oitenta anos de publicação da primeiríssima edição de Frankenstein, ou o Prometeu Moderno, escrito por Mary Shelley. Naquele mesmo ano, outro inglês, H.G. Wells, lança em forma de livro O Homem Invisível e publica os capítulos iniciais de A Guerra dos Mundos em revistas da Inglaterra e dos EUA. Já o irlandês chamado Bram Stoker coloca nas livrarias o livro que viria a mudar sua vida e a história da literatura: Drácula. Do outro lado do oceano, nos Estados Unidos, um garoto de apenas sete anos acabou de escrever seu primeiro conto, que levou o nome de “The Noble Eavesdropper”. H.P. Lovecraft é este escritor americano precoce. Mais ao sul do continente americano, no Brasil, naquele marcante ano de 1897, quarenta intelectuais se reúnem para fundar a Academia Brasileira de Letras (abl), inspirados em um modelo de agremiação de escritores já existente na França desde 1635. Cada um daqueles fundadores escolhe um patrono para nomear a cadeira que vai ocupar, e eles passam a chamar a si mesmos de imortais. A antologia Medo Imortal, mais nova integrante da coleção Medo Clássico da Darkside® Books, vem a público para mostrar que existe mais em comum entre os fatos dos dois parágrafos anteriores do que pode aparentar à primeira vista. Liderados por nosso maior escritor, Machado de Assis, aqueles intelectuais brasileiros são pessoas de seu tempo, conectados com o que estava sendo produzido nos grandes centros culturais do mundo em sua época. Nas páginas de Medo Imortal estão reunidos, além de poesias, 32 exemplares da prosa de escritores diretamente ligados à nossa principal instituição dedicada à literatura. São contos que evocam o sobrenatural, apresentam monstros, descrevem atos de psicopatas, dão o testemunho de todo tipo imaginável de atrocidades concebidas pela mente humana. Produzidos entre a segunda metade do século xix e a primeira metade do século xx, tais textos representam o que de melhor se escreveu nos primeiros cem anos de produção do terror em nosso país. Organizado pelo jornalista Romeu Martins, com ilustrações de Lula Palomanes, a lista de autores para o livro contou com a colaboração de estudos realizados pelos maiores pesquisadores do terror e do insólito das principais universidades brasileiras. São ao todo treze autores, escolhidos entre os patronos, os fundadores e os primeiros eleitos para ocupar os salões da Academia Brasileira de Letras. Entre eles, a Darkside® Books aproveitou a oportunidade de reparar uma injustiça histórica cometida naquele ano de 1897 e traz também contos da escritora Júlia Lopes de Almeida, importante nome de nossa literatura que participou das reuniões para a fundação da Academia mas que na última hora acabou sendo barrada por ser mulher em uma instituição que em seus primeiros oitenta anos só aceitou a presença de homens.",
+        ["keywords"] = "Terror\nLiteratura em português\nBrasil\nTerror clássico",
+    },
+    ["doc_pages"] = 622,
+    ["percent_finished"] = 0.1884,
+    ["summary"] = {
+        ["status"] = "reading",
+    },
+}

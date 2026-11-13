@@ -1,0 +1,134 @@
+name: Atualizar estatisticas de leitura
+
+on:
+  schedule:
+    - cron: "17 * * * *"   # de hora em hora
+  workflow_dispatch:        # botao "Run workflow" para atualizar na hora
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Baixar estatisticas do Koofr
+        id: stats
+        env:
+          KOOFR_EMAIL: ${{ secrets.KOOFR_EMAIL }}
+          KOOFR_SENHA: ${{ secrets.KOOFR_SENHA }}
+        run: |
+          curl -fsS -u "$KOOFR_EMAIL:$KOOFR_SENHA" -o statistics.sqlite3 \
+            "https://app.koofr.net/dav/Koofr/KOReader/statistics.sqlite3"
+          mkdir -p privacidade
+          curl -fsS -u "$KOOFR_EMAIL:$KOOFR_SENHA" -o privacidade/banco.txt \
+            "https://app.koofr.net/dav/Koofr/KoShelf/capas/indice.txt" || echo "(ainda sem banco de capas)"
+          touch privacidade/banco.txt
+          curl -fsS -u "$KOOFR_EMAIL:$KOOFR_SENHA" -o privacidade/meta.json \
+            "https://app.koofr.net/dav/Koofr/KoShelf/capas/meta.json" || echo "{}" > privacidade/meta.json
+          echo "hash=$(cat statistics.sqlite3 privacidade/banco.txt privacidade/meta.json | sha256sum | cut -c1-20)" >> "$GITHUB_OUTPUT"
+
+      - name: Tirar livros privados (pasta Adulto) e esconder livros ainda nao catalogados
+        run: |
+          python3 - <<'PY'
+          import os, sqlite3
+          def lista(n):
+              p = os.path.join("privacidade", n)
+              return set(open(p).read().split()) if os.path.exists(p) else set()
+          ocultos, conhecidos = lista("ocultos.txt"), lista("conhecidos.txt")
+          conhecidos |= {l.split()[0] for l in open("privacidade/banco.txt") if l.strip()} - ocultos
+          c = sqlite3.connect("statistics.sqlite3")
+          tirados = anonimos = 0
+          for i, md5 in c.execute("select id, md5 from book").fetchall():
+              if md5 in ocultos:
+                  c.execute("delete from page_stat_data where id_book = ?", (i,))
+                  c.execute("delete from book where id = ?", (i,)); tirados += 1
+              elif md5 not in conhecidos:
+                  c.execute("update book set title = ?, authors = '', series = NULL where id = ?",
+                            ("Livro ainda não catalogado", i)); anonimos += 1
+          c.commit(); c.execute("vacuum"); c.close()
+          print("privados removidos:", tirados, "| sem titulo:", anonimos)
+          PY
+
+      - name: Ver se mudou algo desde a ultima publicacao
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .ultima_publicacao
+          key: stats-${{ steps.stats.outputs.hash }}-${{ hashFiles('koshelf.toml', '.github/workflows/atualizar.yml', 'livros/**', 'privacidade/**', 'scripts/**') }}
+          lookup-only: true
+
+      - name: Estante automatica (capas do banco privado no Koofr)
+        if: steps.cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        env:
+          KOOFR_EMAIL: ${{ secrets.KOOFR_EMAIL }}
+          KOOFR_SENHA: ${{ secrets.KOOFR_SENHA }}
+        run: python3 scripts/estante_auto.py
+
+      - name: Gerar o site com o KoShelf
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL -o koshelf.zip https://github.com/paviro/KoShelf/releases/latest/download/linux-musl-x86_64.zip
+          unzip -o -q koshelf.zip -d bin
+          ./bin/koshelf export site
+          echo "leituras.rubito.com.br" > site/CNAME
+          touch site/.nojekyll
+
+      - uses: actions/setup-python@v5
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Imagens de compartilhar tambem em JPG e PNG
+        if: steps.cache.outputs.cache-hit != 'true'
+        continue-on-error: true   # se falhar, o site sai mesmo assim (so sem JPG/PNG)
+        run: |
+          python -m pip install --quiet pillow
+          python scripts/compartilhar.py site
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          path: site
+
+      - name: Publicar
+        id: deploy
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/deploy-pages@v4
+
+      - name: Guardar marca da publicacao
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: date > .ultima_publicacao
+
+      - uses: actions/cache/save@v4
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          path: .ultima_publicacao
+          key: stats-${{ steps.stats.outputs.hash }}-${{ hashFiles('koshelf.toml', '.github/workflows/atualizar.yml', 'livros/**', 'privacidade/**', 'scripts/**') }}
+
+      - name: Manter o agendamento ativo
+        run: |
+          # O GitHub desliga agendamentos em repositorios sem atividade por 60 dias.
+          ultimo=$(git log -1 --format=%ct)
+          if [ $(( $(date +%s) - ultimo )) -gt $(( 45 * 86400 )) ]; then
+            git config user.name "KoShelf"
+            git config user.email "koshelf@users.noreply.github.com"
+            git commit --allow-empty -m "Manter agendamento ativo"
+            git push
+          fi
