@@ -1,0 +1,13 @@
+[library]
+paths = ["livros"]
+statistics_db = "statistics.sqlite3"
+
+[koshelf]
+title = "Minhas leituras"
+language = "pt_BR"
+timezone = "America/Sao_Paulo"
+
+[statistics]
+include_all_stats = true
+heatmap_scale_max = "2h"
+min_time_per_day = "30s"
